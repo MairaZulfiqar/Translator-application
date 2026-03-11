@@ -5,8 +5,10 @@ const translatedText = document.getElementById('translated-text');
 const statusMsg = document.getElementById('status');
 const labelLeft = document.getElementById('label-left');
 const labelRight = document.getElementById('label-right');
+const videoFeed = document.getElementById('video-feed');
 
 let isListening = false;
+let stream = null;
 let recognition;
 
 // Initialize Speech Recognition
@@ -88,15 +90,32 @@ async function translateText(text) {
     }
 }
 
-function startListening() {
+async function startListening() {
     const lang = langToggle.checked ? 'fi-FI' : 'en-US';
     recognition.lang = lang;
-    recognition.start();
+    
+    try {
+        if (!stream) {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            videoFeed.srcObject = stream;
+        }
+        recognition.start();
+    } catch (err) {
+        console.error("Error accessing camera: ", err);
+        statusMsg.textContent = "Error: Camera access required.";
+    }
 }
 
 function stopListening() {
     isListening = false;
     recognition.stop();
+    
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+        videoFeed.srcObject = null;
+    }
+    
     recordBtn.classList.remove('listening');
     recordBtn.querySelector('span').textContent = 'Start Listening';
     statusMsg.textContent = 'Stopped. Press the button to start again.';
