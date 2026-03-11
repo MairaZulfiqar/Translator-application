@@ -25,12 +25,37 @@
                     <div class="video-overlay">LIVE FEED</div>
                 </div>
                 <div class="controls-top">
-                    <div class="lang-label" id="label-left">English</div>
-                    <label class="switch">
-                        <input type="checkbox" id="lang-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                    <div class="lang-label" id="label-right">Finnish</div>
+                    <div class="selector-group">
+                        <label for="source-lang">From</label>
+                        <select id="source-lang" class="lang-select">
+                            <option value="en-US">English</option>
+                            <option value="fi-FI">Finnish</option>
+                            <option value="ur-PK">Urdu</option>
+                            <option value="fa-IR">Persian</option>
+                            <option value="de-DE">German</option>
+                            <option value="sv-SE">Swedish</option>
+                            <option value="ar-SA">Arabic</option>
+                            <option value="zh-CN">Chinese</option>
+                        </select>
+                    </div>
+                    
+                    <div class="swap-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"></path><path d="M20 7H4"></path><path d="m8 21-4-4 4-4"></path><path d="M4 17h16"></path></svg>
+                    </div>
+
+                    <div class="selector-group">
+                        <label for="target-lang">To</label>
+                        <select id="target-lang" class="lang-select">
+                            <option value="fi-FI">Finnish</option>
+                            <option value="en-US">English</option>
+                            <option value="ur-PK">Urdu</option>
+                            <option value="fa-IR">Persian</option>
+                            <option value="de-DE">German</option>
+                            <option value="sv-SE">Swedish</option>
+                            <option value="ar-SA">Arabic</option>
+                            <option value="zh-CN">Chinese</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="text-areas">

@@ -1,10 +1,9 @@
 const recordBtn = document.getElementById('record-btn');
-const langToggle = document.getElementById('lang-toggle');
+const sourceLangSelect = document.getElementById('source-lang');
+const targetLangSelect = document.getElementById('target-lang');
 const originalText = document.getElementById('original-text');
 const translatedText = document.getElementById('translated-text');
 const statusMsg = document.getElementById('status');
-const labelLeft = document.getElementById('label-left');
-const labelRight = document.getElementById('label-right');
 const videoFeed = document.getElementById('video-feed');
 
 let isListening = false;
@@ -40,8 +39,6 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const transcript = finalTranscript || interimTranscript;
         if (transcript) {
             originalText.textContent = transcript;
-            
-            // Only translate final results to reduce API calls and perceived latency
             if (finalTranscript) {
                 translateText(finalTranscript);
             }
@@ -56,7 +53,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
     recognition.onend = () => {
         if (isListening) {
-            recognition.start(); // Keep listening if not manually stopped
+            recognition.start();
         } else {
             stopListening();
         }
@@ -68,13 +65,13 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
 // Translation Logic
 async function translateText(text) {
-    const sourceLang = langToggle.checked ? 'fi' : 'en';
-    const targetLang = langToggle.checked ? 'en' : 'fi';
+    // Get language codes (e.g., 'en' from 'en-US')
+    const sourceLang = sourceLangSelect.value.split('-')[0];
+    const targetLang = targetLangSelect.value.split('-')[0];
     
     statusMsg.textContent = 'Translating...';
     
     try {
-        // Using MyMemory Free API (no key required for small volumes)
         const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`);
         const data = await response.json();
         
@@ -91,18 +88,27 @@ async function translateText(text) {
 }
 
 async function startListening() {
-    const lang = langToggle.checked ? 'fi-FI' : 'en-US';
-    recognition.lang = lang;
+    recognition.lang = sourceLangSelect.value;
     
     try {
         if (!stream) {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            if (!window.isSecureContext) {
+                statusMsg.textContent = "Error: Camera requires a secure context (HTTPS or localhost).";
+                return;
+            }
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
             videoFeed.srcObject = stream;
         }
         recognition.start();
     } catch (err) {
         console.error("Error accessing camera: ", err);
-        statusMsg.textContent = "Error: Camera access required.";
+        if (err.name === 'NotAllowedError') {
+            statusMsg.textContent = "Error: Camera permission denied.";
+        } else {
+            statusMsg.textContent = `Error: ${err.message}`;
+        }
+        // Start recognition anyway if only camera fails
+        recognition.start();
     }
 }
 
@@ -130,30 +136,16 @@ recordBtn.addEventListener('click', () => {
     }
 });
 
-langToggle.addEventListener('change', () => {
-    const isFItoEN = langToggle.checked;
-    
-    if (isFItoEN) {
-        labelLeft.classList.remove('active');
-        labelRight.classList.add('active');
-        originalText.setAttribute('placeholder', 'Puhu nyt...');
-        translatedText.setAttribute('placeholder', 'Translation appears here...');
-    } else {
-        labelLeft.classList.add('active');
-        labelRight.classList.remove('active');
-        originalText.setAttribute('placeholder', 'Listening...');
-        translatedText.setAttribute('placeholder', 'Käännös ilmestyy tänne...');
-    }
-    
-    // Reset contents on toggle
+// Reset UI on language change
+const handleLangChange = () => {
     originalText.textContent = '...';
     translatedText.textContent = '...';
-    
     if (isListening) {
         stopListening();
-        setTimeout(startListening, 100); // Restart with new language
+        setTimeout(startListening, 100);
     }
-});
+};
 
-// Set initial active state
-labelLeft.classList.add('active');
+sourceLangSelect.addEventListener('change', handleLangChange);
+targetLangSelect.addEventListener('change', handleLangChange);
+
